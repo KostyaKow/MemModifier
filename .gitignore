@@ -3,3 +3,4 @@ pycloak
 __pycache__/
 *.so
 *.o
+a.out
