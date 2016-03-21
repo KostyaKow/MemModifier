@@ -8,7 +8,7 @@ int main() {
    
    while (1) {
       printf("%c\n", *c);
-      usleep(3000000);
+      usleep(1000000); //1000000 = 1 second
       printf("%p\n", (void*)c);
    }
 }

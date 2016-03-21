@@ -8,21 +8,22 @@ int test(pid_t pid, void* address, char newval) {
    struct iovec local[1];
    struct iovec remote[1];
 
-   //comment
+   /*comment
    char* z = malloc(1);
    *z = 'z';
    void* addr = (void*)0x239a010;
    pid_t p = 12923;
-   //comment
+   //comment*/
 
-   local[0].iov_base = z; /*&newval;*/
+   local[0].iov_base = &newval; //z
    local[0].iov_len = 1;
 
-   remote[0].iov_base = addr; /*address;*/
+   remote[0].iov_base = address; /*addr;*/
    remote[0].iov_len = 1;
 
-   ssize_t nwrite = process_vm_writev(p/*pid*/, local, 1, remote, 1, 0);
-   printf("%s\n", strerror(errno));
+   ssize_t nwrite = process_vm_writev(pid/*p*/, local, 1, remote, 1, 0);
+   if (nwrite == -1)
+      printf("%s\n", strerror(errno));
    return nwrite;
 }
 
