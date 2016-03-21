@@ -22,6 +22,8 @@ def find_by_name(name):
          return p
    return None
 
+FIND_CHUNK_SIZE = 0x1000
+
 class Process:
    def __init__(self, pid=-1):
       self.mmaps = None
@@ -54,21 +56,48 @@ class Process:
          return path
       else:
          return None
-   def parse_mmaps(self):
+   def read_maps(self):
       maps = []
       mapsStr = u.read_file(u.join('/proc', self.pid, 'maps')).strip()
       entries = mapsStr.split('\n')
       for entry in entries:
-         lst = entry.split(' ')
+         lst = list(filter(lambda char: char!='', entry.split(' ')))
+         p = lst[1]
          item = {
-            'region'       : lst[0],
-            'permissions'  : lst[1],
-            'offset'       : lst[2],
-            'device'       : lst[3],
-            'inode'        : lst[4]
+            'region'          : lst[0],
+            'permission'      : p,
+            'offset'          : lst[2],
+            'device'          : lst[3],
+            'inode'           : lst[4],
          }
+         item['path'] = lst[5] if len(lst) == 6 else None
          maps.append(item)
       return maps
+   def parse_mmaps(self):
+      maps = self.read_maps()
+      parsed = []
+      for mmap in maps:
+         p = mmap['permission']
+         start, end = mmap['region'].split('-')
+         major, minor = mmap['device'].split(':')
+
+         item = {
+            'readable'        : True if p[0] == 'r' else False,
+            'writable'        : True if p[1] == 'w' else False,
+            'executable'      : True if p[2] == 'x' else False,
+            'shared'          : True if p[3] != '-' else False,
+            'start'           : start,
+            'end'             : end,
+            'offset'          : mmap['offset'],
+            'dev-major'       : major,
+            'dev-minor'       : minor,
+            'inode'           : mmap['inode'],
+            'path'            : mmap['path'] #TODO: split and stuff
+         }
+         parsed.append(item)
+      self.mmaps = parsed
+      return parsed
+   def find(self, mmap_start, data, pattern):
 
 class MemoryMap:
    def __init__(self):
@@ -101,15 +130,16 @@ def main():
          break
    print("CSGO: %s %s", csgo.pid, csgo.get_exe_path())
 
-   client = MemoryMap()
-   while client.start == 0:
+   client = None
+   while not client:
       if not csgo.is_running():
-         err('Exited game before we found cilent')
+         err('Exited game before we found client')
 
       csgo.parse_mmaps()
-      for mmap in csgo.maps:
-         if mmap.fname == 'client_client.so' and mmap.executable:
-            print('client_client.so: [%s] [%s] [%s]' % (mmap.start , mmap.end, mmap.pathname))
+      for mmap in csgo.mmaps:
+         fname = u.get_file_name(mmap['path'])
+         if fname == 'client_client.so' and mmap.executable:
+            print('client_client.so: [%s] [%s] [%s]' % (mmap.start , mmap.end, mmap.path))
             client = mmap
             break
       time.sleep(sleep_time)
