@@ -1,3 +1,5 @@
 *.swp
 pycloak
 __pycache__/
+*.so
+*.o
