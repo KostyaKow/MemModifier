@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from pycloak import shellutils as u
 import time
 
@@ -38,7 +40,7 @@ class Process:
          return False
       return u.is_dir(u.join('/proc', self.pid))
    def get_exe_path(self):
-      if not self.is_running(): 
+      if not self.is_running():
          return None
       try:
          path = u.expand_link(u.join('/proc', self.pid, 'exe'))
@@ -98,22 +100,23 @@ class Process:
       self.mmaps = parsed
       return parsed
    def find(self, mmap_start, data, pattern):
+      pass
 
 class MemoryMap:
    def __init__(self):
       #memory
       self.start = self.end = 0 #ulong
-      #permissions 
+      #permissions
       self.readable = self.writable = self.executable = self.shared = False #bool
 
       #file data
-      self.offset = 0 #ulong 
+      self.offset = 0 #ulong
       self.deviceMajor = self.deviceMinor = 0 #uchar
       self.inodeFnum = 0 #ulong inodeFileNumber
       self.pathname = self.fname = ''
 
       client_start = 0 #ulong
-      
+
    def find(proc, data, pattern):
       pass #kk TODO
 
@@ -144,7 +147,7 @@ def main():
             break
       time.sleep(sleep_time)
 
-   
+
 #main()
 
 def is_numeric(s):
